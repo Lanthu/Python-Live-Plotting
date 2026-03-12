@@ -17,7 +17,7 @@ from nidaqmx.constants import AcquisitionType
 SAMPLING_RATE = 100          # Hz
 CHUNK_SAMPLES = 50           # samples per read (0.5 s at 100 Hz)
 PLOT_WINDOW_S = 10           # show last N seconds
-TOTAL_SECONDS = 90           # stop after N seconds (or Ctrl+C)
+TOTAL_SECONDS = 10           # stop after N seconds (or Ctrl+C)
 # SYRINGE_DIAMETER = 26.26   # ony for (Harvard) syringe pump relevant
 dt = 1.0 / SAMPLING_RATE
 
