@@ -17,9 +17,11 @@ from nidaqmx.constants import AcquisitionType
 SAMPLING_RATE = 100          # Hz
 CHUNK_SAMPLES = 50           # samples per read (0.5 s at 100 Hz)
 PLOT_WINDOW_S = 60          # show last N seconds
-TOTAL_SECONDS = 300          # stop after N seconds (or Ctrl+C)
+TOTAL_SECONDS = 120          # stop after N seconds (or Ctrl+C)
 # PRESSURE_CONVERSION_FACTOR = 5054.974227  # Convert voltage to pressure
 PRESSURE_CONVERSION_FACTOR = 299.27  # Convert voltage to pressure in mmHg
+VOLUME_FLOW_CONVERSION_FACTOR_SLOPE = 5100.3026  # Convert voltage to volume flow (ml/min)
+VOLUME_FLOW_CONVERSION_FACTOR_INTERCEPT = -2398.8386  # Intercept for volume flow conversion (ml/min)
 # SYRINGE_DIAMETER = 26.26   # ony for (Harvard) syringe pump relevant
 dt = 1.0 / SAMPLING_RATE
 
@@ -67,6 +69,7 @@ def main():
     plot_data_ch2 = []
     plot_data_ch0_pressure = []
     plot_data_ch1_pressure = []
+    plot_data_ch2_flow = []
     plot_data_diff = []
     all_data_ch0 = []
     all_data_ch1 = []
@@ -121,13 +124,17 @@ def main():
                 data_chunk_ch0_pressure = data_chunk_ch0 * PRESSURE_CONVERSION_FACTOR
                 data_chunk_ch1_pressure = data_chunk_ch1 * PRESSURE_CONVERSION_FACTOR
 
+                # ---- Convert to volume flow ----
+                data_chunk_ch2_flow = data_chunk_ch2 * VOLUME_FLOW_CONVERSION_FACTOR_SLOPE + VOLUME_FLOW_CONVERSION_FACTOR_INTERCEPT
+
                 # ---- Update plot buffer (sliding window) ----
                 plot_data_ch0.extend(data_chunk_ch0.tolist())
                 plot_data_ch1.extend(data_chunk_ch1.tolist())
                 plot_data_ch2.extend(data_chunk_ch2.tolist())
                 plot_data_ch0_pressure.extend(data_chunk_ch0_pressure.tolist())
                 plot_data_ch1_pressure.extend(data_chunk_ch1_pressure.tolist())
-                
+                plot_data_ch2_flow.extend(data_chunk_ch2_flow.tolist())
+
                 # Calculate absolute difference for this chunk (in pressure)
                 data_chunk_diff = np.abs(data_chunk_ch0_pressure - data_chunk_ch1_pressure)
                 plot_data_diff.extend(data_chunk_diff.tolist())
@@ -144,7 +151,7 @@ def main():
                     plot_time = plot_time[k:]
                     plot_data_ch0 = plot_data_ch0[k:]
                     plot_data_ch1 = plot_data_ch1[k:]
-                    plot_data_ch2 = plot_data_ch2[k:]
+                    plot_data_ch2_flow = plot_data_ch2_flow[k:]
                     plot_data_ch0_pressure = plot_data_ch0_pressure[k:]
                     plot_data_ch1_pressure = plot_data_ch1_pressure[k:]
                     plot_data_diff = plot_data_diff[k:]
@@ -157,9 +164,9 @@ def main():
                 ax1.set_ylim(y_diff.min() - ypad_diff, y_diff.max() + ypad_diff)
 
                 # Update subplot 2: ai3 (voltage)
-                line_ch2.set_data(plot_time, plot_data_ch2)
+                line_ch2.set_data(plot_time, plot_data_ch2_flow)
                 ax2.set_xlim(max(0.0, plot_time[0]), plot_time[-1])
-                y_ch2 = np.asarray(plot_data_ch2)
+                y_ch2 = np.asarray(plot_data_ch2_flow)
                 ypad_ch2 = 0.05 * (y_ch2.max() - y_ch2.min() + 1e-12)
                 ax2.set_ylim(y_ch2.min() - ypad_ch2, y_ch2.max() + ypad_ch2)
 
