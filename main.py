@@ -16,12 +16,21 @@ from nidaqmx.constants import AcquisitionType
 # -----------------------------
 SAMPLING_RATE = 100          # Hz
 CHUNK_SAMPLES = 50           # samples per read (0.5 s at 100 Hz)
-PLOT_WINDOW_S = 60          # show last N seconds
-TOTAL_SECONDS = 120          # stop after N seconds (or Ctrl+C)
+PLOT_WINDOW_S = 10          # show last N seconds
+TOTAL_SECONDS = 60          # stop after N seconds (or Ctrl+C)
+# Pressure conversion factors for the specific sensor up to 4 bar
 # PRESSURE_CONVERSION_FACTOR = 5054.974227  # Convert voltage to pressure
-PRESSURE_CONVERSION_FACTOR = 299.27  # Convert voltage to pressure in mmHg
-VOLUME_FLOW_CONVERSION_FACTOR_SLOPE = 5100.3026  # Convert voltage to volume flow (ml/min)
-VOLUME_FLOW_CONVERSION_FACTOR_INTERCEPT = -2398.8386  # Intercept for volume flow conversion (ml/min)
+# PRESSURE_CONVERSION_FACTOR = 299.27  # Convert voltage to pressure in mmHg
+# Pressure conversion factors for the specific sensor up to 0.5 bar
+PRESSURE_CONVERSION_FACTOR = 37.916  # Convert voltage to pressure in mmHg
+# VOLUME_FLOW_CONVERSION_FACTOR_SLOPE = 5100.3026  # Convert voltage to volume flow (ml/min)
+# VOLUME_FLOW_CONVERSION_FACTOR_INTERCEPT = -2398.8386  # Intercept for volume flow conversion (ml/min)
+# Volume flow conversion factors for the specific sensor Sonoflow V3.0 (ml/min)
+VOLUME_FLOW_CONVERSION_FACTOR_SLOPE = 696.26  # Convert voltage to volume flow (ml/min)
+VOLUME_FLOW_CONVERSION_FACTOR_INTERCEPT = -1348.8  # Intercept for volume flow conversion (ml/min)
+LOWER_Y_LIM_FLOW = -3000
+UPPER_Y_LIM_FLOW = 0
+# VOLUME_FLOW_CONVERSION_FACTOR_INTERCEPT_VOLTAGE = 0.471237  # Voltage corresponding to zero flow (ml/min)
 # SYRINGE_DIAMETER = 26.26   # ony for (Harvard) syringe pump relevant
 dt = 1.0 / SAMPLING_RATE
 
@@ -45,7 +54,7 @@ def main():
     # Subplot 2: ai3 (voltage)
     line_ch2, = ax2.plot([], [], label='ai3', color='green')
     ax2.set_xlabel("Time [s]")
-    ax2.set_ylabel("Voltage [V]")
+    ax2.set_ylabel("Volume Flow [ml/min]")
     ax2.set_title("Channel ai3")
     ax2.grid(True)
     ax2.legend()
@@ -166,9 +175,7 @@ def main():
                 # Update subplot 2: ai3 (voltage)
                 line_ch2.set_data(plot_time, plot_data_ch2_flow)
                 ax2.set_xlim(max(0.0, plot_time[0]), plot_time[-1])
-                y_ch2 = np.asarray(plot_data_ch2_flow)
-                ypad_ch2 = 0.05 * (y_ch2.max() - y_ch2.min() + 1e-12)
-                ax2.set_ylim(y_ch2.min() - ypad_ch2, y_ch2.max() + ypad_ch2)
+                ax2.set_ylim(LOWER_Y_LIM_FLOW, UPPER_Y_LIM_FLOW)
 
                 # Update subplot 3: original ai1 and ai2 (voltage, for debugging)
                 line_ch0_debug.set_data(plot_time, plot_data_ch0)
