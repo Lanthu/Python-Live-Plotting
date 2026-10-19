@@ -14,22 +14,29 @@ from nidaqmx.constants import AcquisitionType
 # -----------------------------
 # Settings
 # -----------------------------
-SAMPLING_RATE = 100          # Hz
-CHUNK_SAMPLES = 50           # samples per read (0.5 s at 100 Hz)
+SAMPLING_RATE = 100          # Rate of sampling of the voltage measurements into buffer (Hz)
+CHUNK_SAMPLES = 50           # Samples per read retrieved from buffer (0.5 s at 100 Hz)
 PLOT_WINDOW_S = 10          # show last N seconds
-TOTAL_SECONDS = 60          # stop after N seconds (or Ctrl+C)
+TOTAL_SECONDS = 270          # stop after N seconds (or Ctrl+C)
 # Pressure conversion factors for the specific sensor up to 4 bar
 # PRESSURE_CONVERSION_FACTOR = 5054.974227  # Convert voltage to pressure
 # PRESSURE_CONVERSION_FACTOR = 299.27  # Convert voltage to pressure in mmHg
 # Pressure conversion factors for the specific sensor up to 0.5 bar
-PRESSURE_CONVERSION_FACTOR = 37.916  # Convert voltage to pressure in mmHg
+# PRESSURE_CONVERSION_FACTOR = 37.916  # Convert voltage to pressure in mmHg
+# Pressure conversion factor unity
+PRESSURE_CONVERSION_FACTOR = 1.0
+# Pressure conversion factors for sensor 0..4bar 09.10.2026
+# PRESSURE_CONVERSION_FACTOR = 4092.4  # Convert voltage to pressure in mmH2O
 # VOLUME_FLOW_CONVERSION_FACTOR_SLOPE = 5100.3026  # Convert voltage to volume flow (ml/min)
 # VOLUME_FLOW_CONVERSION_FACTOR_INTERCEPT = -2398.8386  # Intercept for volume flow conversion (ml/min)
 # Volume flow conversion factors for the specific sensor Sonoflow V3.0 (ml/min)
-VOLUME_FLOW_CONVERSION_FACTOR_SLOPE = 696.26  # Convert voltage to volume flow (ml/min)
-VOLUME_FLOW_CONVERSION_FACTOR_INTERCEPT = -1348.8  # Intercept for volume flow conversion (ml/min)
-LOWER_Y_LIM_FLOW = -3000
-UPPER_Y_LIM_FLOW = 0
+# VOLUME_FLOW_CONVERSION_FACTOR_SLOPE = 1364.5  # Convert voltage to volume flow (ml/min)
+# VOLUME_FLOW_CONVERSION_FACTOR_INTERCEPT = 585.6  # Intercept for volume flow conversion (ml/min)
+# Volume flow conversion factors unity
+VOLUME_FLOW_CONVERSION_FACTOR_SLOPE = 1.0  # Convert voltage to volume flow (ml/min)
+VOLUME_FLOW_CONVERSION_FACTOR_INTERCEPT = 0.0  # Intercept for volume flow conversion (ml/min)
+# LOWER_Y_LIM_FLOW = 0
+# UPPER_Y_LIM_FLOW = 3000
 # VOLUME_FLOW_CONVERSION_FACTOR_INTERCEPT_VOLTAGE = 0.471237  # Voltage corresponding to zero flow (ml/min)
 # SYRINGE_DIAMETER = 26.26   # ony for (Harvard) syringe pump relevant
 dt = 1.0 / SAMPLING_RATE
@@ -175,7 +182,14 @@ def main():
                 # Update subplot 2: ai3 (voltage)
                 line_ch2.set_data(plot_time, plot_data_ch2_flow)
                 ax2.set_xlim(max(0.0, plot_time[0]), plot_time[-1])
-                ax2.set_ylim(LOWER_Y_LIM_FLOW, UPPER_Y_LIM_FLOW)
+
+                # Comment in the following lines to set dynamic y-limits for volume flow plot
+                y_ch2 = np.asarray(plot_data_ch2_flow)
+                ypad_ch2 = 0.05 * (y_ch2.max() - y_ch2.min() + 1e-12)
+                ax2.set_ylim(y_ch2.min() - ypad_ch2, y_ch2.max() + ypad_ch2)
+
+                # Comment in the following line to set fixed y-limits for volume flow plot
+                # ax2.set_ylim(LOWER_Y_LIM_FLOW, UPPER_Y_LIM_FLOW)
 
                 # Update subplot 3: original ai1 and ai2 (voltage, for debugging)
                 line_ch0_debug.set_data(plot_time, plot_data_ch0)
